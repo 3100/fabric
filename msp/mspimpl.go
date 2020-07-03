@@ -12,6 +12,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	m "github.com/hyperledger/fabric-protos-go/msp"
@@ -113,6 +114,7 @@ func newBccspMsp(version MSPVersion, defaultBCCSP bccsp.BCCSP) (MSP, error) {
 	theMsp := &bccspmsp{}
 	theMsp.version = version
 	theMsp.bccsp = defaultBCCSP
+	fmt.Printf("version: %+v\n", version)
 	switch version {
 	case MSPv1_0:
 		theMsp.internalSetupFunc = theMsp.setupV1
@@ -214,13 +216,14 @@ func (msp *bccspmsp) getSigningIdentityFromConf(sidInfo *m.SigningIdentityInfo) 
 		return nil, err
 	}
 
+	fmt.Printf("ski\n%+v\npubkey\n%+v\n", pubKey.SKI(), pubKey)
 	// Find the matching private key in the BCCSP keystore
 	privKey, err := msp.bccsp.GetKey(pubKey.SKI())
 	// Less Secure: Attempt to import Private Key from KeyInfo, if BCCSP was not able to find the key
 	if err != nil {
 		mspLogger.Debugf("Could not find SKI [%s], trying KeyMaterial field: %+v\n", hex.EncodeToString(pubKey.SKI()), err)
 		if sidInfo.PrivateSigner == nil || sidInfo.PrivateSigner.KeyMaterial == nil {
-			return nil, errors.New("KeyMaterial not found in SigningIdentityInfo")
+			return nil, errors.Wrap(err, "KeyMaterial not found in SigningIdentityInfo")
 		}
 
 		pemKey, _ := pem.Decode(sidInfo.PrivateSigner.KeyMaterial)

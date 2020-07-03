@@ -251,6 +251,9 @@ func (msp *bccspmsp) setupNodeOUs(config *m.FabricMSPConfig) error {
 	if config.FabricNodeOus != nil {
 
 		msp.ouEnforcement = config.FabricNodeOus.Enable
+		if !msp.ouEnforcement {
+			fmt.Printf("ouEnforcement becomes false in setupNodeOUs. config: %+vln", config)
+		}
 
 		if config.FabricNodeOus.ClientOuIdentifier == nil || len(config.FabricNodeOus.ClientOuIdentifier.OrganizationalUnitIdentifier) == 0 {
 			return errors.New("Failed setting up NodeOUs. ClientOU must be different from nil.")
@@ -282,6 +285,7 @@ func (msp *bccspmsp) setupNodeOUs(config *m.FabricMSPConfig) error {
 
 	} else {
 		msp.ouEnforcement = false
+		fmt.Printf("ouEnforcement becomes false in setupNodeOUs because fabricNodeOu is nil. config: %+vln", config)
 	}
 
 	return nil
@@ -290,10 +294,14 @@ func (msp *bccspmsp) setupNodeOUs(config *m.FabricMSPConfig) error {
 func (msp *bccspmsp) setupNodeOUsV142(config *m.FabricMSPConfig) error {
 	if config.FabricNodeOus == nil {
 		msp.ouEnforcement = false
+		fmt.Printf("ouEnforcement becomes false in setupNodeOUsV142 because fabricNodeOu is nil. config: %+vln", config)
 		return nil
 	}
 
 	msp.ouEnforcement = config.FabricNodeOus.Enable
+	if !msp.ouEnforcement {
+		fmt.Printf("ouEnforcement becomes false in setupNodeOUsV142 because Enable is false. config: %+vln", config)
+	}
 
 	counter := 0
 	// ClientOU
@@ -359,6 +367,7 @@ func (msp *bccspmsp) setupNodeOUsV142(config *m.FabricMSPConfig) error {
 	if counter == 0 {
 		// Disable NodeOU
 		msp.ouEnforcement = false
+		fmt.Printf("ouEnforcement becomes false in setupNodeOUsV142 because counter is 0. config: %+vln", config)
 	}
 
 	return nil
